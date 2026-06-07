@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Book_Management.Domain.AdoN
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Book_Management.Domain.Dapper", "Book_Management.Domain.Dapper\Book_Management.Domain.Dapper.csproj", "{B3C4BF85-E49A-45F2-A501-5D46F9BA03C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Book_Management.WebApp", "Book_Management.WebApp\Book_Management.WebApp.csproj", "{FF627739-C877-4F8D-B4B8-9FB0575A6904}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,5 +34,9 @@ Global
 		{B3C4BF85-E49A-45F2-A501-5D46F9BA03C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3C4BF85-E49A-45F2-A501-5D46F9BA03C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3C4BF85-E49A-45F2-A501-5D46F9BA03C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF627739-C877-4F8D-B4B8-9FB0575A6904}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF627739-C877-4F8D-B4B8-9FB0575A6904}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF627739-C877-4F8D-B4B8-9FB0575A6904}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF627739-C877-4F8D-B4B8-9FB0575A6904}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

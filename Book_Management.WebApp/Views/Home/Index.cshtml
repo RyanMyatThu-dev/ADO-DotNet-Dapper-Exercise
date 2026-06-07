@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="hero">
+    <h1>Book Management</h1>
+    <p class="hero-subtitle">
+        Browse and manage your book catalog through two data access implementations.
+    </p>
+    <div class="hero-actions">
+        <a href="/ado/books" class="btn btn-primary">
+            <span class="btn-label">ADO.NET</span>
+            <span class="btn-desc">Data access via raw ADO.NET</span>
+        </a>
+        <a href="/dapper/books" class="btn btn-secondary">
+            <span class="btn-label">Dapper</span>
+            <span class="btn-desc">Data access via Dapper ORM</span>
+        </a>
+    </div>
+</div>

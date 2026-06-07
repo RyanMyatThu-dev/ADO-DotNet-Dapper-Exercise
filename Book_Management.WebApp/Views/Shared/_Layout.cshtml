@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Book Management</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="topbar">
+        <div class="container">
+            <div class="topbar-inner">
+                <a href="/" class="logo">Book Management</a>
+                <nav class="provider-tabs">
+                    <a href="/ado/books"
+                       class="tab @(ViewBag.Provider == "ado" ? "active" : "")">
+                        ADO.NET
+                    </a>
+                    <a href="/dapper/books"
+                       class="tab @(ViewBag.Provider == "dapper" ? "active" : "")">
+                        Dapper
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        @if (TempData["Success"] is string successMsg)
+        {
+            <div class="alert alert-success">@successMsg</div>
+        }
+        @RenderBody()
+    </main>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
