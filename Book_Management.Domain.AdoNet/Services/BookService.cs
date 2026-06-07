@@ -16,141 +16,106 @@ public class BookService : IBookService
 
     public async Task<IEnumerable<BookModel>> GetAllAsync()
     {
-        using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        string query = "SELECT id, title, author, genre, description, publisheddate FROM books WHERE isdeleted = FALSE";
+        using var command = new NpgsqlCommand(query, connection);
+        using var adapter = new NpgsqlDataAdapter(command);
+        
+        var dataTable = new DataTable();
+        adapter.Fill(dataTable);
+
+        var books = new List<BookModel>();
+        foreach (DataRow row in dataTable.Rows)
         {
-            await connection.OpenAsync();
-            Console.WriteLine("Connection opened successfully.");
-
-            string query = "SELECT \"Id\", \"Title\", \"Author\", \"Genre\", \"Description\", \"PublishedDate\" FROM \"Books\" WHERE \"IsDeleted\" = FALSE";
-            using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
-            using (NpgsqlDataAdapter adapter = new NpgsqlDataAdapter(command))
+            books.Add(new BookModel
             {
-                DataTable dataTable = new DataTable();
-                adapter.Fill(dataTable);
-
-                List<BookModel> books = new List<BookModel>();
-                foreach (DataRow row in dataTable.Rows)
-                {
-                    books.Add(new BookModel
-                    {
-                        Id = Convert.ToInt32(row["Id"]),
-                        Title = row["Title"].ToString() ?? string.Empty,
-                        Author = row["Author"].ToString() ?? string.Empty,
-                        Genre = row["Genre"].ToString(),
-                        Description = row["Description"].ToString() ?? string.Empty,
-                        PublishedDate = Convert.ToDateTime(row["PublishedDate"])
-                    });
-                }
-                return books;
-            {
-                
-            }
+                Id = Convert.ToInt32(row["id"]),
+                Title = row["title"].ToString() ?? string.Empty,
+                Author = row["author"].ToString() ?? string.Empty,
+                Genre = row["genre"] != DBNull.Value ? row["genre"].ToString() : null,
+                Description = row["description"] != DBNull.Value ? row["description"].ToString() : null,
+                PublishedDate = row["publisheddate"] != DBNull.Value ? Convert.ToDateTime(row["publisheddate"]) : null
+            });
         }
-    }
+        return books;
     }
 
     public async Task<BookModel?> GetByIdAsync(int id)
     {
-        using(NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        string query = "SELECT id, title, author, genre, description, publisheddate FROM books WHERE id = @Id AND isdeleted = FALSE";
+        using var command = new NpgsqlCommand(query, connection);
+        command.Parameters.AddWithValue("@Id", id);
+        using var adapter = new NpgsqlDataAdapter(command);
+        
+        var dataTable = new DataTable();
+        adapter.Fill(dataTable);
+
+        if (dataTable.Rows.Count > 0)
         {
-            await connection.OpenAsync();
-            Console.WriteLine("Connection opened successfully.");
-
-            string query = "SELECT \"Id\", \"Title\", \"Author\", \"Genre\", \"Description\", \"PublishedDate\" FROM \"Books\" WHERE \"Id\" = @Id AND \"IsDeleted\" = FALSE";
-            using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
+            DataRow row = dataTable.Rows[0];
+            return new BookModel
             {
-                command.Parameters.AddWithValue("@Id", id);
-                using (NpgsqlDataAdapter dataAdapter = new NpgsqlDataAdapter(command))
-                {
-                    DataTable dataTable = new DataTable();
-                    dataAdapter.Fill(dataTable);
-
-                    if (dataTable.Rows.Count > 0)
-                    {
-                        DataRow row = dataTable.Rows[0];
-                        return new BookModel
-                        {
-                            Id = Convert.ToInt32(row["Id"]),
-                            Title = row["Title"].ToString() ?? string.Empty,
-                            Author = row["Author"].ToString() ?? string.Empty,
-                            Genre = row["Genre"].ToString(),
-                            Description = row["Description"].ToString() ?? string.Empty,
-                            PublishedDate = Convert.ToDateTime(row["PublishedDate"])
-                        };
-                    }
-                }
-            }
-            return null;
+                Id = Convert.ToInt32(row["id"]),
+                Title = row["title"].ToString() ?? string.Empty,
+                Author = row["author"].ToString() ?? string.Empty,
+                Genre = row["genre"] != DBNull.Value ? row["genre"].ToString() : null,
+                Description = row["description"] != DBNull.Value ? row["description"].ToString() : null,
+                PublishedDate = row["publisheddate"] != DBNull.Value ? Convert.ToDateTime(row["publisheddate"]) : null
+            };
         }
+        return null;
     }
 
     public async Task<int> CreateAsync(BookModel book)
     {
-        using (NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
-        {
-            await connection.OpenAsync();
-            Console.WriteLine("Connection opened successfully.");
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-            string query = "INSERT INTO \"Books\" (\"Title\", \"Author\", \"Genre\", \"Description\", \"PublishedDate\", \"IsDeleted\", \"CreatedAt\", \"UpdatedAt\") VALUES (@Title, @Author, @Genre, @Description, @PublishedDate, FALSE, NOW(), NOW()) RETURNING \"Id\"";
-            using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Title", book.Title);
-                command.Parameters.AddWithValue("@Author", book.Author);
-                command.Parameters.AddWithValue("@Genre", book.Genre ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("@Description", book.Description ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("@PublishedDate", book.PublishedDate ?? (object)DBNull.Value);
+        string query = "INSERT INTO books (title, author, genre, description, publisheddate, isdeleted, createdat, updatedat) VALUES (@Title, @Author, @Genre, @Description, @PublishedDate, FALSE, NOW(), NOW()) RETURNING id";
+        using var command = new NpgsqlCommand(query, connection);
+        command.Parameters.AddWithValue("@Title", book.Title);
+        command.Parameters.AddWithValue("@Author", book.Author);
+        command.Parameters.AddWithValue("@Genre", book.Genre ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@Description", book.Description ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@PublishedDate", book.PublishedDate ?? (object)DBNull.Value);
 
-                object result = await command.ExecuteNonQueryAsync();
-                return Convert.ToInt32(result);
-            }
-        }
+        object? result = await command.ExecuteScalarAsync();
+        return Convert.ToInt32(result);
     }
 
     public async Task<bool> UpdateAsync(BookModel book)
     {
-        using(NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
-        {
-            await connection.OpenAsync();
-            Console.WriteLine("Connection opened successfully.");
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-            string query = "UPDATE \"Books\" SET \"Title\" = @Title, \"Author\" = @Author, \"Genre\" = @Genre, \"Description\" = @Description, \"PublishedDate\" = @PublishedDate, \"UpdatedAt\" = NOW() WHERE \"Id\" = @Id AND \"IsDeleted\" = FALSE";
-            using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Id", book.Id);
-                command.Parameters.AddWithValue("@Title", book.Title);
-                command.Parameters.AddWithValue("@Author", book.Author);
-                command.Parameters.AddWithValue("@Genre", book.Genre ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("@Description", book.Description ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("@PublishedDate", book.PublishedDate ?? (object)DBNull.Value);
+        string query = "UPDATE books SET title = @Title, author = @Author, genre = @Genre, description = @Description, publisheddate = @PublishedDate, updatedat = NOW() WHERE id = @Id AND isdeleted = FALSE";
+        using var command = new NpgsqlCommand(query, connection);
+        command.Parameters.AddWithValue("@Id", book.Id);
+        command.Parameters.AddWithValue("@Title", book.Title);
+        command.Parameters.AddWithValue("@Author", book.Author);
+        command.Parameters.AddWithValue("@Genre", book.Genre ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@Description", book.Description ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@PublishedDate", book.PublishedDate ?? (object)DBNull.Value);
 
-                int rowsAffected = await command.ExecuteNonQueryAsync();
-                if(rowsAffected > 0)
-                {
-                    Console.WriteLine($"Book with ID {book.Id} updated successfully.");
-                }
-                else
-                {
-                    Console.WriteLine($"No book found with ID {book.Id} to update.");
-                }
-                return rowsAffected > 0;
-        }
-    }
+        int rowsAffected = await command.ExecuteNonQueryAsync();
+        return rowsAffected > 0;
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
-        using(NpgsqlConnection connection = new NpgsqlConnection(_connectionString))
-        {
-            await connection.OpenAsync();
-            Console.WriteLine("Connection opened successfully.");
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-            string query = "UPDATE \"Books\" SET \"IsDeleted\" = TRUE, \"UpdatedAt\" = NOW() WHERE \"Id\" = @Id AND \"IsDeleted\" = FALSE";
-            using (NpgsqlCommand command = new NpgsqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Id", id);
-                int rowsAffected = await command.ExecuteNonQueryAsync();
-                return rowsAffected > 0;
-            }
+        string query = "UPDATE books SET isdeleted = TRUE, updatedat = NOW() WHERE id = @Id AND isdeleted = FALSE";
+        using var command = new NpgsqlCommand(query, connection);
+        command.Parameters.AddWithValue("@Id", id);
+
+        int rowsAffected = await command.ExecuteNonQueryAsync();
+        return rowsAffected > 0;
     }
-}
 }

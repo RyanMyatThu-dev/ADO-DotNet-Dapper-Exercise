@@ -2,7 +2,7 @@
 -- ~30 sample books covering Fiction, Non-Fiction, Science, History, Fantasy, Mystery, Romance, Sci-Fi
 -- Run after schema.sql: psql -U postgres -d Books < scripts/seed.sql
 
-INSERT INTO Books (Title, Author, Genre, Description, PublishedDate)
+INSERT INTO books (title, author, genre, description, publisheddate)
 VALUES
     ('To Kill a Mockingbird', 'Harper Lee', 'Fiction', 'A novel about racial injustice in the Deep South', '1960-07-11'),
     ('1984', 'George Orwell', 'Fiction', 'A dystopian novel about totalitarianism', '1949-06-08'),
